@@ -110,13 +110,11 @@ static void runFile(const char* path){
 	if(result==INTERPRET_COMPILE_ERROR)exit(65);
 	if(result==INTERPRET_RUNTIME_ERROR)exit(70);
 }
-const char * EXAMPLE_CODE="var a=10;\n"
-			"var b=15;\n"
-			"print(a+b)";
+const char * EXAMPLE_CODE="var a=10;\n";
 #define MAIN_PROG 0
 #define TOKEN_DEBUG 1
 #define CHUNK_DEBUG 2
-#define PROG CHUNK_DEBUG
+#define PROG TOKEN_DEBUG
 int main(int argc, const char *argv[]) {
 #if PROG==MAIN_PROG
   if (argc == 1) {
@@ -136,7 +134,8 @@ int main(int argc, const char *argv[]) {
 #elif PROG==CHUNK_DEBUG
  Chunk chunk;
  initChunk(&chunk);
- compile("1+2",&chunk);
+ const char* EXPRESSION="1+2+2*3-2--4\n";
+ compile(EXPRESSION,&chunk);
 #ifndef DEBUG_PRINT_CODE
  dissambleChunk(&chunk)
 #endif

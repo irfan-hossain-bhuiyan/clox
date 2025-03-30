@@ -98,7 +98,7 @@ static const char *tokenTypeToString(TokenType tt) {
   }
 }
 static void printToken(Token token) {
-  printf("%.*s <%s> ,", token.length, token.start, tokenTypeToString(token.type));
+  printf("%.*s <type: %s ,line: %d> ,", token.length, token.start, tokenTypeToString(token.type),token.line);
 }
 void disassembleToken(void) {
   Token t;

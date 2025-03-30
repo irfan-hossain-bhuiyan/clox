@@ -216,7 +216,7 @@ Token scanToken(void) {
   case '!':
     return makeToken(match('=') ? TOKEN_BANG : TOKEN_BANG_EQUAL);
   case '=':
-    return makeToken(match('=') ? TOKEN_EQUAL : TOKEN_EQUAL_EQUAL);
+    return makeToken(match('=') ?TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
   case '>':
     return makeToken(match('=') ? TOKEN_GREATER : TOKEN_GREATER_EQUAL);
   case '<':
