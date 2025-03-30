@@ -1,0 +1,25 @@
+Diagnostics:
+  ClangTidy:
+    Add: 
+      - performance-*
+      - bugprone-*
+    Remove: 
+      - readability-magic-numbers
+      - bugprone-easily-swappable-parameters
+  UnusedIncludes: Strict
+
+CompileFlags:
+  Add:
+    - -std=c99  # or c99, c11 depending on your needs
+    - -Wall
+    - -Wextra
+    - -Wpedantic
+  Remove: -W*
+
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
+
+Index:
+  Background: Build
