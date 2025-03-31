@@ -97,8 +97,9 @@ const char *tokenTypeToString(TokenType tt) {
     return "TOKEN_EOF";
   }
 }
-static void ppToken(Token token) {//pp for pretty Print
-  printf("%.*s <type: %s ,line: %d> ,", token.length, token.start, tokenTypeToString(token.type),token.line);
+static void ppToken(Token token) { // pp for pretty Print
+  printf("%.*s <type: %s ,line: %d> ,", token.length, token.start,
+         tokenTypeToString(token.type), token.line);
 }
 
 void disassembleToken(void) {
@@ -141,13 +142,33 @@ int disassembleInstruction(Chunk *chunk, int offset) {
   case OP_ADD:
     return simpleInstruction("OP_ADD", offset);
   case OP_SUBSTRACT:
-    return simpleInstruction("OP_SUBSTRACT",offset);
+    return simpleInstruction("OP_SUBSTRACT", offset);
   case OP_DIVIDE:
-    return simpleInstruction("OP_DIVIDE",offset);
+    return simpleInstruction("OP_DIVIDE", offset);
   case OP_MULTIPLY:
-    return simpleInstruction("OP_MULTIPLY",offset);
+    return simpleInstruction("OP_MULTIPLY", offset);
   default:
     printf("Unknown opcode %d\n", instruction);
     return offset + 1;
+  }
+}
+const char *opcodeToString(OpCode instruction) {
+  switch (instruction) {
+  case OP_RETURN:
+    return "OP RETURN";
+  case OP_CONSTANT:
+    return "OP Constant";
+  case OP_NEGATE:
+    return "OP_NEGATE";
+  case OP_ADD:
+    return "OP_ADD";
+  case OP_SUBSTRACT:
+    return "OP_SUBSTRACT";
+  case OP_DIVIDE:
+    return "OP_DIVIDE";
+  case OP_MULTIPLY:
+    return "OP_MULTIPLY";
+  default:
+    printf("Unknown opcode %d\n", instruction);
   }
 }

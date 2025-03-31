@@ -110,7 +110,6 @@ static void runFile(const char* path){
 	if(result==INTERPRET_COMPILE_ERROR)exit(65);
 	if(result==INTERPRET_RUNTIME_ERROR)exit(70);
 }
-const char * EXAMPLE_CODE="var a=10;\n";
 #define MAIN_PROG 0
 #define TOKEN_DEBUG 1
 #define CHUNK_DEBUG 2
@@ -128,14 +127,15 @@ int main(int argc, const char *argv[]) {
   freeVM();
   return 0;
 #elif PROG==TOKEN_DEBUG
+const char * EXAMPLE_CODE="\n var a=10;\n" "var b=10;\n";
  initScanner(EXAMPLE_CODE); 
  disassembleToken();
 
 #elif PROG==CHUNK_DEBUG
  Chunk chunk;
  initChunk(&chunk);
- const char* EXPRESSION="1+2+2*3-2--4\n";
- compile(EXPRESSION,&chunk);
+const char *EXPRESSION= "12+15*3--12";
+compile(EXPRESSION,&chunk);
 #ifndef DEBUG_PRINT_CODE
  dissambleChunk(&chunk)
 #endif

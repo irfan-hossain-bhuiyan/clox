@@ -30,4 +30,5 @@ endif()
 
 enable_testing()
 add_executable(myTest test/tests.c)
-add_test(NAME myTest COMMAND myTest)
+add_test(NAME runTest COMMAND myTest)
+set_tests_properties(runTest PROPERTIES ENVIRONMENT "RUNNING_UNDER_CTEST=1")
