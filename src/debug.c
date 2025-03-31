@@ -11,7 +11,7 @@ void disassembleChunk(Chunk *chunk, const char *name) {
   }
 }
 // It prints out the token that has been given to scanner.
-static const char *tokenTypeToString(TokenType tt) {
+const char *tokenTypeToString(TokenType tt) {
   switch (tt) {
   case TOKEN_LEFT_PRACE:
     return "TOKEN_LEFT_PRACE";
@@ -97,14 +97,15 @@ static const char *tokenTypeToString(TokenType tt) {
     return "TOKEN_EOF";
   }
 }
-static void printToken(Token token) {
+static void ppToken(Token token) {//pp for pretty Print
   printf("%.*s <type: %s ,line: %d> ,", token.length, token.start, tokenTypeToString(token.type),token.line);
 }
+
 void disassembleToken(void) {
   Token t;
   do {
     t = scanToken();
-    printToken(t);
+    ppToken(t);
   } while (t.type != TOKEN_EOF);
 }
 
