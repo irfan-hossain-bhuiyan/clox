@@ -13,14 +13,22 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +141 src/main.c
-badd +94 src/compiler.c
-badd +1 ~/projects/clox/header/compiler.h
-badd +1 src/vm.c
-badd +1 header/vm.h
-badd +95 /data/data/com.termux/files/usr/include/stdlib.h
-badd +0 src/debug.c
-badd +6 header/common.h
+badd +38 src/vm.c
+badd +11 header/chunk.h
+badd +190 src/debug.c
+badd +46 src/compiler.c
+badd +28 src/value.c
+badd +24 ~/projects/clox/header/value.h
+badd +108 main.c
+badd +10 header/vm.h
+badd +209 test/tests.c
+badd +38 src/logging.c
+badd +0 ~/projects/clox/include/logging.h
+badd +5 ~/projects/clox/header/logging.h
+badd +0 ~/projects/clox/header/debug.h
+badd +35 CMakeLists.txt
+badd +0 temp.c
+badd +0 temp2.c
 argglobal
 %argdel
 set stal=2
@@ -30,9 +38,14 @@ tabnew +setlocal\ bufhidden=wipe
 tabnew +setlocal\ bufhidden=wipe
 tabnew +setlocal\ bufhidden=wipe
 tabnew +setlocal\ bufhidden=wipe
+tabnew +setlocal\ bufhidden=wipe
+tabnew +setlocal\ bufhidden=wipe
+tabnew +setlocal\ bufhidden=wipe
+tabnew +setlocal\ bufhidden=wipe
 tabrewind
-edit src/main.c
+edit src/debug.c
 argglobal
+balt src/value.c
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -41,44 +54,76 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-68
-normal! zo
-70
-normal! zo
-72
-normal! zo
-81
-normal! zo
-83
-normal! zo
-92
-normal! zo
-97
-normal! zo
-106
-normal! zo
-120
-normal! zo
-121
-normal! zo
-122
+117
 normal! zo
 124
 normal! zo
-132
+126
 normal! zo
-137
+135
 normal! zo
-let s:l = 141 - ((20 * winheight(0) + 14) / 28)
+136
+normal! zo
+138
+normal! zo
+140
+normal! zo
+142
+normal! zo
+144
+normal! zo
+146
+normal! zo
+148
+normal! zo
+150
+normal! zo
+152
+normal! zo
+154
+normal! zo
+156
+normal! zo
+158
+normal! zo
+160
+normal! zo
+162
+normal! zo
+168
+normal! zo
+166
+normal! zo
+167
+normal! zo
+168
+normal! zo
+170
+normal! zo
+172
+normal! zo
+174
+normal! zo
+176
+normal! zo
+178
+normal! zo
+180
+normal! zo
+198
+normal! zo
+198
+normal! zo
+let s:l = 190 - ((27 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 141
-normal! 023|
+keepjumps 190
+normal! 03|
 tabnext
-edit src/debug.c
+edit CMakeLists.txt
 argglobal
-balt src/main.c
+balt src/debug.c
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -87,20 +132,16 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-7
-normal! zo
-9
-normal! zo
-let s:l = 6 - ((5 * winheight(0) + 14) / 28)
+let s:l = 35 - ((29 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 6
-normal! 018|
+keepjumps 35
+normal! 038|
 tabnext
 edit src/compiler.c
 argglobal
-balt /data/data/com.termux/files/usr/include/stdlib.h
+balt test/tests.c
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -109,42 +150,43 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-10
+170
 normal! zo
-53
+174
 normal! zo
-60
+175
 normal! zo
-63
+178
 normal! zo
-63
+181
 normal! zo
-65
+184
 normal! zo
-70
+187
 normal! zo
-79
+190
 normal! zo
-90
+193
 normal! zo
-225
+196
 normal! zo
-228
+199
 normal! zo
-230
+202
 normal! zo
-235
+208
 normal! zo
-let s:l = 28 - ((27 * winheight(0) + 14) / 28)
+229
+normal! zo
+let s:l = 207 - ((25 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 28
-normal! 012|
+keepjumps 207
+normal! 0
 tabnext
-edit header/common.h
+edit test/tests.c
 argglobal
-balt src/compiler.c
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -153,18 +195,50 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-1
-normal! zo
-let s:l = 6 - ((5 * winheight(0) + 14) / 28)
+let s:l = 209 - ((15 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 6
-normal! 024|
+keepjumps 209
+normal! 018|
 tabnext
-edit ~/projects/clox/header/compiler.h
+edit temp2.c
 argglobal
-balt src/compiler.c
+setlocal fdm=expr
+setlocal fde=nvim_treesitter#foldexpr()
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+let s:l = 80 - ((17 * winheight(0) + 14) / 28)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 80
+normal! 05|
+tabnext
+edit temp.c
+argglobal
+setlocal fdm=expr
+setlocal fde=nvim_treesitter#foldexpr()
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+let s:l = 1 - ((0 * winheight(0) + 14) / 28)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 1
+normal! 0
+tabnext
+edit ~/projects/clox/header/debug.h
+argglobal
+balt src/debug.c
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -182,9 +256,9 @@ normal! zt
 keepjumps 1
 normal! 0
 tabnext
-edit src/vm.c
+edit header/chunk.h
 argglobal
-balt ~/projects/clox/header/compiler.h
+balt src/compiler.c
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -193,11 +267,91 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 14) / 28)
+1
+normal! zo
+6
+normal! zo
+25
+normal! zo
+let s:l = 16 - ((15 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
+keepjumps 16
+normal! 018|
+tabnext
+edit src/vm.c
+argglobal
+balt src/compiler.c
+setlocal fdm=expr
+setlocal fde=nvim_treesitter#foldexpr()
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+15
+normal! zo
+21
+normal! zo
+35
+normal! zo
+40
+normal! zo
+42
+normal! zo
+43
+normal! zo
+46
+normal! zo
+47
+normal! zo
+49
+normal! zo
+51
+normal! zo
+55
+normal! zo
+58
+normal! zo
+69
+normal! zo
+70
+normal! zo
+74
+normal! zo
+84
+normal! zo
+85
+normal! zo
+90
+normal! zo
+91
+normal! zo
+98
+normal! zo
+102
+normal! zo
+106
+normal! zo
+110
+normal! zo
+123
+normal! zo
+126
+normal! zo
+129
+normal! zo
+152
+normal! zo
+155
+normal! zo
+let s:l = 42 - ((12 * winheight(0) + 14) / 28)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 42
 normal! 0
 tabnext
 edit header/vm.h
@@ -217,13 +371,77 @@ normal! zo
 normal! zo
 11
 normal! zo
-let s:l = 1 - ((0 * winheight(0) + 14) / 28)
+let s:l = 24 - ((23 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 1
-normal! 0
-tabnext 1
+keepjumps 24
+normal! 026|
+tabnext
+edit src/compiler.c
+argglobal
+balt src/vm.c
+setlocal fdm=expr
+setlocal fde=nvim_treesitter#foldexpr()
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+34
+normal! zo
+40
+normal! zo
+42
+normal! zo
+63
+normal! zo
+65
+normal! zo
+67
+normal! zo
+128
+normal! zo
+151
+normal! zo
+158
+normal! zo
+159
+normal! zo
+165
+normal! zo
+170
+normal! zo
+174
+normal! zo
+175
+normal! zo
+178
+normal! zo
+181
+normal! zo
+184
+normal! zo
+193
+normal! zo
+196
+normal! zo
+199
+normal! zo
+202
+normal! zo
+208
+normal! zo
+229
+normal! zo
+let s:l = 193 - ((12 * winheight(0) + 14) / 28)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 193
+normal! 02|
+tabnext 2
 set stal=1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf

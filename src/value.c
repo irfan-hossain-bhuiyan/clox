@@ -1,5 +1,6 @@
 #include "value.h"
 #include "memory.h"
+#include <stdbool.h>
 #include <stdio.h>
 void writeValueArray(ValueArray *array, Value value) {
   if (array->capacity < array->count + 1) {
@@ -23,4 +24,16 @@ void freeValueArray(ValueArray *array) {
   initValueArray(array);
 }
 
-void printValue(Value value) { printf("%g", value); }
+void printValue(Value value) {
+  switch (value.type) {
+  case VAL_BOOL:
+    printf(AS_BOOL(value) ? "true" : "false");
+    break;
+  case VAL_NIL:
+    printf("nill");
+    break;
+  case VAL_NUMBER:
+    printf("%g", AS_NUMBER(value));
+    break;
+  }
+}

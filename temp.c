@@ -3,7 +3,6 @@
 #include "debug.h"
 #include "value.h"
 #include "vm.h"
-#include <__stdarg_va_list.h>
 #include <assert.h>
 #include <compiler.h>
 #include <logging.h>
@@ -12,23 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-static bool haltOnFailure=true;
-static void failedExit(const char *errorReport, ...) {
-  va_list args;
-  va_start(args, errorReport);
-  fprintf(stderr, errorReport, args);
-  va_end(args);
-  if (haltOnFailure) {
-    exit(EXIT_FAILURE);
-  }
-}
-#define ASSERT(x)                                                              \
-  do {                                                                         \
-    if (!(x)) {                                                                \
-      failedExit("ASSERT(" #x ")");                                            \
-    }                                                                          \
-  } while (false);
-
 static bool valuesEqual(Value valueA, Value valueB) {
   if (valueA.type != valueB.type) {
     return false;
@@ -69,11 +51,10 @@ void tokenAssert(void) {
             tokenTypeToString(expectedToken.type));
     fprintf(stdout, "  Generated: (line: %d, type: %s)\n", generatedToken.line,
             tokenTypeToString(generatedToken.type));
-
     if (generatedToken.line != expectedToken.line ||
         generatedToken.type != expectedToken.type) {
-      failedExit("Error at token index %d:\n",
-                 i); // Causes the test to fail in CTest
+      fprintf(stderr, "Error at token index %d:\n", i);
+      exit(EXIT_FAILURE); // Causes the test to fail in CTest
     }
     if (generatedToken.type == TOKEN_EOF) {
       break;
@@ -96,14 +77,16 @@ void expressionAssert(const char *expression, const OpCode *expressionOpcodes,
             opcodeToString(expectedInstruction));
 
     if (chunk.code[i] != expressionOpcodes[i]) {
-      failedExit("Error at opcode index %d\n", i);
+      fprintf(stderr, "Error at opcode index %d\n", i);
+      exit(EXIT_FAILURE);
     }
   }
   for (int i = 0; i < chunk.constants.count; i++) {
     Value generatedConstant = chunk.constants.values[i];
     Value expectedConstant = expressionConstants[i];
     if (valuesEqual(generatedConstant, expectedConstant)) {
-      failedExit("Error at opcode index %d\n", i);
+      fprintf(stderr, "Error at opcode index %d\n", i);
+      exit(EXIT_FAILURE);
     }
   }
   freeChunk(&chunk);
@@ -116,17 +99,19 @@ void exprEvalAssert(const char *expr, Value expectedOutput) {
   case INTERPRET_OK:
     break;
   case INTERPRET_COMPILE_ERROR:
-    failedExit("tests outputs compile error.");
+    fprintf(stderr, "tests outputs compile error.");
+    exit(EXIT_FAILURE);
   case INTERPRET_RUNTIME_ERROR:
-    failedExit("tests outputs have runtime error.");
+    fprintf(stderr, "tests outputs have runtime error.");
+    exit(EXIT_FAILURE);
     break;
   }
   Value returnedOutput = getLastReturn();
-  ASSERT(valuesEqual(returnedOutput, expectedOutput));
+  assert(valuesEqual(returnedOutput, expectedOutput));
 }
 void exprErrorAssert(const char *expr, InterpretResult error) {
   InterpretResult result = interpret(expr);
-  ASSERT(error == result);
+  assert(error == result);
 }
 
 void vmTest(void) {
@@ -201,12 +186,9 @@ static void compilerTest(void) {
 }
 int main(int argc, char *argV[]) {
   // Setting env variable
-  // Basic ASSERTions for testing
+  // Basic assertions for testing
   if (argc != 2) {
-	  tokenTest();
-	  compilerTest();
-	  vmTest();
-	  return 0;
+    exit(EXIT_FAILURE);
   }
   char *arg = argV[1];
   if (strcmp(arg, "token") == 0) {
@@ -216,9 +198,8 @@ int main(int argc, char *argV[]) {
   } else if (strcmp(arg, "vm") == 0) {
     vmTest();
   } else {
-    failedExit("Typing error in argument");
+    exit(EXIT_FAILURE);
   }
   // Evaluating VM,If it works
   return 0;
 }
-

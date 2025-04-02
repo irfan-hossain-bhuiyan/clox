@@ -30,5 +30,6 @@ endif()
 
 enable_testing()
 add_executable(myTest test/tests.c)
-add_test(NAME runTest COMMAND myTest)
-set_tests_properties(runTest PROPERTIES ENVIRONMENT "RUNNING_UNDER_CTEST=1")
+add_test(NAME tokenTest COMMAND myTest token)
+add_test(NAME compilerTest COMMAND myTest compiler)
+add_test(NAME vmTest COMMAND myTest vm)

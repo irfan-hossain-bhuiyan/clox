@@ -21,4 +21,5 @@ void freeVM(void);
 void push(Value value);
 Value pop(void);
 InterpretResult interpret(const char* source);
+Value getLastReturn(void);
 #endif
