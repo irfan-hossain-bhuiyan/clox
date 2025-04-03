@@ -3,7 +3,6 @@
 #include "debug.h"
 #include "value.h"
 #include "vm.h"
-#include <logging.h>
 #include <__stdarg_va_list.h>
 #include <assert.h>
 #include <compiler.h>
@@ -140,7 +139,7 @@ void exprEvalAssert(const char *expr, Value expectedOutput) {
 }
 void exprErrorAssert(const char *expr, InterpretResult error) {
   initVM();
-  printf(TO_BLUE("Code is->\"%s\"\n"),expr);
+  printf(TO_BLUE("Code is->\"%s\"\n"), expr);
   InterpretResult result = interpret(expr);
   ASSERT(error == result);
   printf("All ok\n");
@@ -212,7 +211,8 @@ static void tokenTest(void) {
   tokenAssert(CODE4, TOKENS4);
 
   const char *CODE5 = "2<3";
-  const DToken TOKENS5[] = {{TOKEN_NUMBER, 1}, {TOKEN_LESS, 1}, {TOKEN_NUMBER, 1}, {TOKEN_EOF, 1}};
+  const DToken TOKENS5[] = {
+      {TOKEN_NUMBER, 1}, {TOKEN_LESS, 1}, {TOKEN_NUMBER, 1}, {TOKEN_EOF, 1}};
   tokenAssert(CODE5, TOKENS5);
   greenPrint("\nTokens is working.\n");
 }
@@ -261,11 +261,26 @@ static void expressionCompilerTest(void) {
 
   const char *EXPRESSION4 = "false!=false";
   const OpCode EXPRESSION_OPCODE4[] = {
-      OP_FALSE,OP_FALSE, OP_EQUAL, OP_NOT, OP_RETURN,
+      OP_FALSE, OP_FALSE, OP_EQUAL, OP_NOT, OP_RETURN,
   };
   const Value EXPRESSION_CONSTANT4[] = {};
 
   expressionAssert(EXPRESSION4, EXPRESSION_OPCODE4, EXPRESSION_CONSTANT4);
+
+  const char *EXPRESSION5 = "!(5 - 4 > 3 * 2 == !nil)";
+  const OpCode EXPRESSION_OPCODE5[] = {
+      OP_CONSTANT, 0,      OP_CONSTANT, 1,        OP_SUBSTRACT,
+      OP_CONSTANT, 2,      OP_CONSTANT, 3,        OP_MULTIPLY,
+      OP_GREATER,  OP_NIL, OP_NOT,      OP_EQUAL, OP_NOT,
+      OP_RETURN,
+  };
+  const Value EXPRESSION_CONSTANT5[] = {
+      NUMBER_VAL(5),
+      NUMBER_VAL(4),
+      NUMBER_VAL(3),
+      NUMBER_VAL(2),
+  };
+  expressionAssert(EXPRESSION5, EXPRESSION_OPCODE5, EXPRESSION_CONSTANT5);
 
   greenPrint("\nExpression parser is working\n");
 }
