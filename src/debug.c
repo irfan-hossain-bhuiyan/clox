@@ -198,3 +198,20 @@ const char *opcodeToString(OpCode instruction) {
     return "OP_NOT";
   }
 }
+
+Str24 valueToString(Value value) {
+  Str24 output;
+  switch (value.type) {
+
+  case VAL_BOOL:
+    sprintf(output.core, "%s", value.as.boolean ? "true" : "false");
+    break;
+  case VAL_NIL:
+    sprintf(output.core, "nil");
+    break;
+  case VAL_NUMBER:
+    sprintf(output.core, "%f", value.as.number);
+    break;
+  }
+  return output;
+}

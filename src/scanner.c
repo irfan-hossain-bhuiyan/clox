@@ -215,13 +215,13 @@ Token scanToken(void) {
 
     // matching double character.
   case '!':
-    return makeToken(match('=') ? TOKEN_BANG : TOKEN_BANG_EQUAL);
+    return makeToken(match('=') ? TOKEN_BANG_EQUAL:TOKEN_BANG );
   case '=':
     return makeToken(match('=') ?TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
   case '>':
-    return makeToken(match('=') ? TOKEN_GREATER : TOKEN_GREATER_EQUAL);
+    return makeToken(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
   case '<':
-    return makeToken(match('=') ? TOKEN_LESS : TOKEN_LESS_EQUAL);
+    return makeToken(match('=') ? TOKEN_LESS_EQUAL: TOKEN_LESS);
   case '"':
     return string();
   default:return errorToken("Unexpected character.");
