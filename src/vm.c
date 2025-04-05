@@ -2,6 +2,8 @@
 #include "chunk.h"
 #include "compiler.h"
 #include "debug.h"
+#include "memory.h"
+#include "object.h"
 #include "value.h"
 #include <__stdarg_va_list.h>
 #include <stdarg.h>
@@ -35,23 +37,23 @@ static void runtimeError(const char *format, ...) {
 static bool isFalsey(Value value) {
   return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
+
+static void concatenate(void){
+	ObjString* b=AS_STRING(pop());
+	ObjString* a=AS_STRING(pop());
+	int length=a->length+b->length;
+	char* chars = ALLOCATE(char, length+1);
+	memcpy(chars,a->chars,a->length);
+	memcpy(chars+a->length,b->chars,b->length);
+	chars[length]='\0';
+	ObjString* result=takeString(chars,length);
+	push(OBJ_VAL(result));
+}
 static Value lastReturned = NIL_VAL;
 // Save the last return output of the code
 static void saveReturn(void) { lastReturned = peek(0); }
 Value getLastReturn(void) { return lastReturned; }
-static bool valuesEqual(Value valueA, Value valueB) {
-  if (valueA.type != valueB.type) {
-    return false;
-  }
-  switch (valueA.type) {
-  case VAL_BOOL:
-    return AS_BOOL(valueA) == AS_BOOL(valueB);
-  case VAL_NIL:
-    return true;
-  case VAL_NUMBER:
-    return AS_NUMBER(valueA) == AS_NUMBER(valueB);
-  }
-}
+
 static InterpretResult run(void) {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
@@ -96,7 +98,18 @@ static InterpretResult run(void) {
       break;
     }
     case OP_ADD: {
-      BINARY_OP(NUMBER_VAL, +);
+      if (peek(0).type == VAL_NUMBER && peek(1).type == VAL_NUMBER) {
+        double b = ((pop()).as.number);
+        double a = ((pop()).as.number);
+        push(((Value){VAL_NUMBER, {.number = (a + b)}}));
+
+      }else if(IS_STRING(peek(0)) && IS_STRING(peek(1))){
+	concatenate();
+      } else {
+
+        runtimeError("Operands must be numbers or Strings");
+        return INTERPRET_RUNTIME_ERROR;
+      }
       break;
     }
     case OP_SUBSTRACT: {

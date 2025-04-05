@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <object.h>
 
 // TODO:The parser has two token as input.
 // In rlox,I used the source as reference.And a Vec<Error> for all error.
@@ -147,6 +148,10 @@ static void number(void) {
                         NULL); // strtod converts str to double value
   emitConstant(NUMBER_VAL(value));
 }
+static void string(void) {
+  emitConstant(OBJ_VAL(
+      copyString(parser.previous.start + 1, parser.previous.length - 2)));
+}
 
 static void
 unary(void) { // The consume of - expression came before unary() function call
@@ -185,7 +190,7 @@ static void binary(void) {
     emitByte(OP_DIVIDE);
     return;
   case TOKEN_BANG_EQUAL:
-    emitBytes(OP_EQUAL,OP_NOT);
+    emitBytes(OP_EQUAL, OP_NOT);
     return;
   case TOKEN_EQUAL_EQUAL:
     emitByte(OP_EQUAL);
@@ -200,10 +205,8 @@ static void binary(void) {
     emitByte(OP_LESS);
     return;
   case TOKEN_LESS_EQUAL:
-    emitBytes(OP_GREATER,OP_NOT);
+    emitBytes(OP_GREATER, OP_NOT);
     return;
-
-
 
   default:
     error("This should be unreacheable.binary operation.");
@@ -247,7 +250,7 @@ ParseRule rules[] = {
     [TOKEN_LESS] = {NULL, binary, PREC_COMPARASION},
     [TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMPARASION},
     [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
-    [TOKEN_STRING] = {NULL, NULL, PREC_NONE},
+    [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},

@@ -1,5 +1,6 @@
 #include "value.h"
 #include "memory.h"
+#include <object.h>
 #include <stdbool.h>
 #include <stdio.h>
 void writeValueArray(ValueArray *array, Value value) {
@@ -35,5 +36,27 @@ void printValue(Value value) {
   case VAL_NUMBER:
     printf("%g", AS_NUMBER(value));
     break;
+  case VAL_OBJ:
+    printObject(value);
+    break;
+  }
+}
+bool valuesEqual(Value valueA, Value valueB) {
+  if (valueA.type != valueB.type) {
+    return false;
+  }
+  switch (valueA.type) {
+  case VAL_BOOL:
+    return AS_BOOL(valueA) == AS_BOOL(valueB);
+  case VAL_NIL:
+    return true;
+  case VAL_NUMBER:
+    return AS_NUMBER(valueA) == AS_NUMBER(valueB);
+  case VAL_OBJ: {
+    ObjString *aString = AS_STRING(valueA);
+    ObjString *bString = AS_STRING(valueB);
+    return aString->length == bString->length &&
+           memcmp(aString->chars, bString->chars, aString->length) == 0;
+  }
   }
 }

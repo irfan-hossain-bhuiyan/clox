@@ -20,16 +20,22 @@ link_libraries(appLib)
 
 add_executable(my_app main.c)
 
+
+add_executable(myTest test/tests.c)
 # Enable runtime sanitizers for Debug builds
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-        target_compile_options(my_app PRIVATE -fsanitize=undefined -fno-omit-frame-pointer)
-        target_link_options(my_app PRIVATE -fsanitize=undefined)
+	if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+		foreach(target  my_app myTest)
+			target_compile_options(${target} PRIVATE -Wall -Wextra -Wuninitialized 
+				-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
+			target_link_options(${target} PRIVATE -fsanitize=undefined
+				-fsanitize=address)
+		endforeach()
 	endif()
 endif()
 
 enable_testing()
-add_executable(myTest test/tests.c)
 add_test(NAME tokenTest COMMAND myTest token)
 add_test(NAME compilerTest COMMAND myTest compiler)
 add_test(NAME vmTest COMMAND myTest vm)
+

@@ -29,20 +29,6 @@ static void failedExit(const char *errorReport, ...) {
     }                                                                          \
   } while (false);
 
-static bool valuesEqual(Value valueA, Value valueB) {
-  if (valueA.type != valueB.type) {
-    return false;
-  }
-  switch (valueA.type) {
-  case VAL_BOOL:
-    return AS_BOOL(valueA) == AS_BOOL(valueB);
-  case VAL_NIL:
-    return true;
-  case VAL_NUMBER:
-    return AS_NUMBER(valueA) == AS_NUMBER(valueB);
-  }
-}
-
 // A simple function to test; alternatively, include your header file if this
 // function is declared there.
 typedef struct {
