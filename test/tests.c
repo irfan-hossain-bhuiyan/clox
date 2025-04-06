@@ -139,6 +139,7 @@ void exprErrorAssert(const char *expr, InterpretResult error) {
 
 void vmTest(void) {
   exprEvalAssert("2+3*(3*3)", NUMBER_VAL(29));
+  exprEvalAssert("2+2+2*0", NUMBER_VAL(4));
   exprEvalAssert("2<3.1", BOOL_VAL(true));
   exprEvalAssert("2>3.1", BOOL_VAL(false));
   exprEvalAssert("2>=3.1", BOOL_VAL(false));
@@ -297,6 +298,16 @@ static void expressionCompilerTest(void) {
       STRING_VAL("Hello WorldI am irfan")};
 
   expressionAssert(EXPRESSION7, EXPRESSION_OPCODE7, EXPRESSION_CONSTANT7);
+
+  const char *EXPRESSION8 = "2+2+2*0";
+  const OpCode EXPRESSION_OPCODE8[] = {
+	OP_CONSTANT,0,OP_CONSTANT,1,OP_ADD,OP_CONSTANT,2,OP_CONSTANT,3,OP_MULTIPLY,OP_ADD,OP_RETURN,
+  };
+  const Value EXPRESSION_CONSTANT8[] = {
+	NUMBER_VAL(2),NUMBER_VAL(2),NUMBER_VAL(2),NUMBER_VAL(0),
+  };
+
+  expressionAssert(EXPRESSION8, EXPRESSION_OPCODE8, EXPRESSION_CONSTANT8);
   greenPrint("\nExpression parser is working\n");
 }
 int main(int argc, char *argV[]) {

@@ -17,8 +17,15 @@ VM vm;
 static void resetStack(void) {
   vm.stackTop = vm.stack; // This means the stack is empty.
 }
-void initVM(void) { resetStack(); }
-void freeVM(void) {}
+
+
+void initVM(void) { 
+	resetStack(); 
+	vm.objects=NULL;
+}
+void freeVM(void) {
+	freeObjects();
+}
 static Value peek(int distance) { return vm.stackTop[-1 - distance]; }
 static void runtimeError(const char *format, ...) {
   va_list args;

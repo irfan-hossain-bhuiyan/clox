@@ -27,7 +27,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
 		foreach(target  my_app myTest)
 			target_compile_options(${target} PRIVATE -Wall -Wextra -Wuninitialized 
-				-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer)
+				-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -g)
 			target_link_options(${target} PRIVATE -fsanitize=undefined
 				-fsanitize=address)
 		endforeach()

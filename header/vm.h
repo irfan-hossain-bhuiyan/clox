@@ -9,17 +9,19 @@ typedef enum {
   INTERPRET_RUNTIME_ERROR,
 } InterpretResult;
 typedef struct {
-  Chunk *chunk;//Chunk is a list of instruction,
-	       //So Vm is series of list of instruction.
-  uint8_t *ip; //ip stands for instruction pointer.So it is instruction pointer for each chunks.
+  Chunk *chunk; // Chunk is a list of instruction,
+                // So Vm is series of list of instruction.
+  uint8_t *ip; // ip stands for instruction pointer.So it is instruction pointer
+               // for each chunks.
   Value stack[STACK_MAX];
   Value *stackTop; // A pointer is kept instead of index,because it is faster to
                    // dereference.
+  Obj *objects;
 } VM;
 void initVM(void);
 void freeVM(void);
 void push(Value value);
 Value pop(void);
-InterpretResult interpret(const char* source);
+InterpretResult interpret(const char *source);
 Value getLastReturn(void);
 #endif
