@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "chunk.h"
+#include "object.h"
 #include "value.h"
 #include <scanner.h>
 #include <stdint.h>
@@ -212,6 +213,8 @@ Str24 valueToString(Value value) {
   case VAL_NUMBER:
     sprintf(output.core, "%f", value.as.number);
     break;
+  case VAL_OBJ:
+    objectToString(output.core, value);
   }
   return output;
 }

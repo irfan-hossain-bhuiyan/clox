@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <compiler.h>
 #include <logging.h>
+#include <object.h>
 #include <scanner.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -28,6 +29,10 @@ static void failedExit(const char *errorReport, ...) {
       failedExit("ASSERT(" #x ")");                                            \
     }                                                                          \
   } while (false);
+
+static Value STRING_VAL(const char *chars) {
+  return OBJ_VAL(copyString(chars, strlen(chars)));
+}
 
 // A simple function to test; alternatively, include your header file if this
 // function is declared there.
@@ -268,6 +273,26 @@ static void expressionCompilerTest(void) {
   };
   expressionAssert(EXPRESSION5, EXPRESSION_OPCODE5, EXPRESSION_CONSTANT5);
 
+  const char *EXPRESSION6 = "\"Hello \"+\"World\"==\"Hello World\" ";
+  const OpCode EXPRESSION_OPCODE6[] = {
+      OP_CONSTANT, 0, OP_CONSTANT, 1,         OP_ADD,
+      OP_CONSTANT, 2, OP_EQUAL,    OP_RETURN,
+  };
+  const Value EXPRESSION_CONSTANT6[] = {
+      STRING_VAL("Hello "), STRING_VAL("World"), STRING_VAL("Hello World")};
+  expressionAssert(EXPRESSION6, EXPRESSION_OPCODE6, EXPRESSION_CONSTANT6);
+
+  const char *EXPRESSION7 =
+      "\"Hello \"+\"World\" +\"I am irfan\"==\"Hello WorldI am irfan\"";
+  const OpCode EXPRESSION_OPCODE7[] = {
+      OP_CONSTANT, 0,      OP_CONSTANT, 1, OP_ADD,   OP_CONSTANT,
+      2,           OP_ADD, OP_CONSTANT, 3, OP_EQUAL, OP_RETURN,
+  };
+  const Value EXPRESSION_CONSTANT7[] = {
+      STRING_VAL("Hello "), STRING_VAL("World"), STRING_VAL("I am irfan"),
+      STRING_VAL("Hello WorldI am irfan")};
+
+  expressionAssert(EXPRESSION7, EXPRESSION_OPCODE7, EXPRESSION_CONSTANT7);
   greenPrint("\nExpression parser is working\n");
 }
 int main(int argc, char *argV[]) {

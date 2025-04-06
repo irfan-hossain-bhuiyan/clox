@@ -1,6 +1,7 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 #include "common.h"
+#include <stdint.h>
 #include <value.h>
 typedef enum {
   OBJ_STRING,
@@ -12,13 +13,14 @@ struct Obj {
 };
 struct ObjString{
 	Obj obj;
-	int length;
+	uintptr_t length;
 	char* chars;
 };
 
-ObjString* takeString(char* chars, int length);
-ObjString* copyString(const char* chars,int length);
+ObjString* takeString(char* chars, uintptr_t length);
+ObjString* copyString(const char* chars,uintptr_t length);
 void printObject(Value value);
+void objectToString(char *output,const Value value);
 
 static inline bool isObjType(Value value,ObjType type){
 	return IS_OBJ(value) && AS_OBJ(value)->type==type;
