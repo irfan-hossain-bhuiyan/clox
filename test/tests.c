@@ -150,10 +150,14 @@ void vmTest(void) {
   exprEvalAssert("3.14159", NUMBER_VAL(3.14159));
   exprEvalAssert("true", BOOL_VAL(true));
   exprEvalAssert("1+--3", NUMBER_VAL(4));
+  exprEvalAssert("\"I am irfan\"", STRING_VAL("I am irfan"));
+  exprEvalAssert("\"I am irfan.\"+ \" I am a student.\"", STRING_VAL("I am irfan. I am a student."));
+  exprEvalAssert("\"hello\"+\" \"+\"world\"==\"hello world\"",BOOL_VAL(true));
   exprErrorAssert("1++2--3", INTERPRET_COMPILE_ERROR);
   exprErrorAssert("true*3+2", INTERPRET_RUNTIME_ERROR);
   exprErrorAssert("true+true", INTERPRET_RUNTIME_ERROR);
   exprErrorAssert("nil<=nil", INTERPRET_RUNTIME_ERROR);
+  exprErrorAssert("\"irfan\">\"everyone else\"", INTERPRET_RUNTIME_ERROR);
 
   greenPrint("\n VM is working \n");
 }
