@@ -9,28 +9,29 @@ typedef enum {
 
 struct Obj {
   ObjType type;
-  Obj* next;
+  Obj *next;
 };
-struct ObjString{
-	Obj obj;
-	uintptr_t length;
-	char* chars;
+struct ObjString {
+  Obj obj;
+  uintptr_t length;
+  char *chars;
+  uint32_t hash;
 };
 
-ObjString* takeString(char* chars, uintptr_t length);
-ObjString* copyString(const char* chars,uintptr_t length);
+ObjString *takeString(char *chars, uintptr_t length);
+ObjString *copyString(const char *chars, uintptr_t length);
 void printObject(Value value);
-void objectToString(char *output,const Value value);
+void objectToString(char *output, const Value value);
 
-static inline bool isObjType(Value value,ObjType type){
-	return IS_OBJ(value) && AS_OBJ(value)->type==type;
+static inline bool isObjType(Value value, ObjType type) {
+  return IS_OBJ(value) && AS_OBJ(value)->type == type;
 }
 
-#define IS_STRING(value) isObjType(value,OBJ_STRING)
+#define IS_STRING(value) isObjType(value, OBJ_STRING)
 
 #define OBJ_TYPE(value) (AS_OBJ(value)->type)
 
-#define AS_STRING(value) ((ObjString*)AS_OBJ(value))
-#define AS_CSTRING(value) (((ObjString*)AS_OBJ(value))->chars)
+#define AS_STRING(value) ((ObjString *)AS_OBJ(value))
+#define AS_CSTRING(value) (((ObjString *)AS_OBJ(value))->chars)
 
 #endif

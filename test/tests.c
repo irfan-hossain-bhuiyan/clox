@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <table.h>
 static bool haltOnFailure = true;
 static void failedExit(const char *errorReport, ...) {
   va_list args;
@@ -137,6 +138,120 @@ void exprErrorAssert(const char *expr, InterpretResult error) {
   freeVM();
 }
 
+void stringHashTest(void) {
+  ObjString *str1 = takeString("Hello", 5);
+  ObjString *str2 = takeString("World", 5);
+  ObjString *str3 = takeString("Hello", 5);
+  ObjString *str4 = takeString("hello", 5);
+  assert(str1->hash == str3->hash);
+  assert(str1->hash != str4->hash);
+  assert(str2->hash != str3->hash);
+}
+
+void tableTest(void) {
+  // Initialize table for primary tests.
+  Table table;
+  initTable(&table);
+
+  // --- Test 1: Basic insertion and retrieval ---
+  // Insert several key-value pairs with mixed value types.
+  tableSet(&table, takeString(" i", 2), NUMBER_VAL(12.0));
+  tableSet(&table, takeString("OK", 2), BOOL_VAL(true));
+  tableSet(&table, takeString("3", 1), STRING_VAL("Will be deleted"));
+
+  Value value = NIL_VAL;
+  bluePrint("Table get check");
+  // Check a key that does not exist (note: key lookup is case-sensitive).
+  assert(!tableGet(&table, takeString("ok", 2), &value));
+  assert(IS_NIL(value));
+
+  // Retrieve the 'OK' key and verify its boolean value.
+  assert(tableGet(&table, takeString("OK", 2), &value));
+  assert(valuesEqual(value, BOOL_VAL(true)));
+  bluePrint("Table get works");
+
+  // --- Test 2: Deletion ---
+  bluePrint("Table delete checks");
+  // Delete a key that exists.
+  assert(tableDelete(&table, takeString("3", 1)));
+  // Attempt to delete a key that does not exist.
+  assert(!tableDelete(&table, takeString("2", 1)));
+  // Confirm that the deleted key no longer exists.
+  assert(!tableGet(&table, takeString("3", 1), &value));
+  // Ensure that the previous value remains unchanged (the deleted value is not
+  // overwritten in 'value'). In this test, 'value' is expected to still hold
+  // the old value from the previous successful get. Depending on your
+  // implementation, this behavior might need adjustment.
+  assert(valuesEqual(value, BOOL_VAL(true)));
+
+  // --- Test 3: Key replacement ---
+  // Replace an existing key's value.
+  assert(tableSet(&table, takeString("OK", 2), NUMBER_VAL(42.0)));
+  // Retrieve the key to ensure that the value has been replaced.
+  assert(tableGet(&table, takeString("OK", 2), &value));
+  assert(valuesEqual(value, NUMBER_VAL(42.0)));
+
+  // --- Test 4: Merging tables using tableAddAll ---
+  // Create a second table to test merging.
+  Table table2;
+  initTable(&table2);
+  // Insert new keys and also a key that overlaps with an existing key in
+  // 'table'.
+  tableSet(&table2, takeString("no", 2), STRING_VAL("NO"));
+  tableSet(&table2, takeString(" i", 2), STRING_VAL("replaced"));
+
+  // Merge table2 into table.
+  tableAddAll(&table2, &table);
+
+  // After merging, verify that:
+  // 1. Keys from table2 were added.
+  // 2. Existing keys in 'table' (like " i") were replaced by those in table2.
+
+  // Check key " i" (which should have been replaced).
+  assert(tableGet(&table, takeString(" i", 2), &value));
+  assert(valuesEqual(value, STRING_VAL("replaced")));
+
+  // Check key "no" was added.
+  assert(tableGet(&table, takeString("no", 2), &value));
+  assert(valuesEqual(value, STRING_VAL("NO")));
+
+  // Clean up both tables.
+  freeTable(&table2);
+  freeTable(&table);
+
+  bluePrint("All table tests passed successfully.");
+}
+// void tableTest(void) {
+//   Table table;
+//   initTable(&table);
+//   // Test 1
+//   tableSet(&table, takeString(" i", 2), NUMBER_VAL(12.0));
+//   tableSet(&table, takeString("OK", 2), BOOL_VAL(true));
+//   tableSet(&table, takeString("3", 1), STRING_VAL("Will be deleted"));
+//
+//   Table table2;
+//   initTable(&table2);
+//   tableSet(&table2, takeString("no", 2), STRING_VAL("NO"));
+//   tableSet(&table2, takeString(" i", 2), STRING_VAL("replaced"));
+//
+//   Value value = NIL_VAL;
+//   bluePrint("Table get check");
+//   assert(!tableGet(&table, takeString("ok", 2), &value));
+//   assert(IS_NIL(value));
+//   assert(tableGet(&table, takeString("OK", 2), &value));
+//   assert(valuesEqual(value, BOOL_VAL(true)));
+//   bluePrint("Table get works");
+//   bluePrint("Table delete checks");
+//   assert(tableDelete(&table, takeString("3", 1)));
+//   assert(!tableDelete(&table, takeString("2", 1)));
+//   assert(!tableGet(&table, takeString("3", 1), &value));
+//   assert(valuesEqual(value, BOOL_VAL(true)));
+//
+//
+//   tableAddAll(&table, &table2);
+//   freeTable(&table);
+// }
+
 void vmTest(void) {
   exprEvalAssert("2+3*(3*3)", NUMBER_VAL(29));
   exprEvalAssert("2+2+2*0", NUMBER_VAL(4));
@@ -152,8 +267,9 @@ void vmTest(void) {
   exprEvalAssert("true", BOOL_VAL(true));
   exprEvalAssert("1+--3", NUMBER_VAL(4));
   exprEvalAssert("\"I am irfan\"", STRING_VAL("I am irfan"));
-  exprEvalAssert("\"I am irfan.\"+ \" I am a student.\"", STRING_VAL("I am irfan. I am a student."));
-  exprEvalAssert("\"hello\"+\" \"+\"world\"==\"hello world\"",BOOL_VAL(true));
+  exprEvalAssert("\"I am irfan.\"+ \" I am a student.\"",
+                 STRING_VAL("I am irfan. I am a student."));
+  exprEvalAssert("\"hello\"+\" \"+\"world\"==\"hello world\"", BOOL_VAL(true));
   exprErrorAssert("1++2--3", INTERPRET_COMPILE_ERROR);
   exprErrorAssert("true*3+2", INTERPRET_RUNTIME_ERROR);
   exprErrorAssert("true+true", INTERPRET_RUNTIME_ERROR);
@@ -301,10 +417,14 @@ static void expressionCompilerTest(void) {
 
   const char *EXPRESSION8 = "2+2+2*0";
   const OpCode EXPRESSION_OPCODE8[] = {
-	OP_CONSTANT,0,OP_CONSTANT,1,OP_ADD,OP_CONSTANT,2,OP_CONSTANT,3,OP_MULTIPLY,OP_ADD,OP_RETURN,
+      OP_CONSTANT, 0,           OP_CONSTANT, 1,           OP_ADD, OP_CONSTANT,
+      2,           OP_CONSTANT, 3,           OP_MULTIPLY, OP_ADD, OP_RETURN,
   };
   const Value EXPRESSION_CONSTANT8[] = {
-	NUMBER_VAL(2),NUMBER_VAL(2),NUMBER_VAL(2),NUMBER_VAL(0),
+      NUMBER_VAL(2),
+      NUMBER_VAL(2),
+      NUMBER_VAL(2),
+      NUMBER_VAL(0),
   };
 
   expressionAssert(EXPRESSION8, EXPRESSION_OPCODE8, EXPRESSION_CONSTANT8);
@@ -326,6 +446,10 @@ int main(int argc, char *argV[]) {
     expressionCompilerTest();
   } else if (strcmp(arg, "vm") == 0) {
     vmTest();
+  } else if (strcmp(arg, "table") == 0) {
+    tableTest();
+  } else if (strcmp(arg, "strHash") == 0) {
+    stringHashTest();
   } else {
     failedExit("Typing error in argument");
   }

@@ -38,4 +38,6 @@ enable_testing()
 add_test(NAME tokenTest COMMAND myTest token)
 add_test(NAME compilerTest COMMAND myTest compiler)
 add_test(NAME vmTest COMMAND myTest vm)
+add_test(NAME strHashTest COMMAND myTest strHash)
+add_test(NAME tableTest COMMAND myTest table)
 
