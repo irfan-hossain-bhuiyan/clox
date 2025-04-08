@@ -155,9 +155,11 @@ void tableTest(void) {
 
   // --- Test 1: Basic insertion and retrieval ---
   // Insert several key-value pairs with mixed value types.
-  tableSet(&table, takeString(" i", 2), NUMBER_VAL(12.0));
-  tableSet(&table, takeString("OK", 2), BOOL_VAL(true));
-  tableSet(&table, takeString("3", 1), STRING_VAL("Will be deleted"));
+  assert(tableSet(&table, takeString(" i", 2), NUMBER_VAL(12.0)));
+  assert(tableSet(&table, takeString("OK", 2), BOOL_VAL(true)));
+  assert(tableSet(&table, takeString("3", 1), STRING_VAL("Will be deleted")));
+
+  disassembleTable(&table);
 
   Value value = NIL_VAL;
   bluePrint("Table get check");
@@ -185,8 +187,8 @@ void tableTest(void) {
   assert(valuesEqual(value, BOOL_VAL(true)));
 
   // --- Test 3: Key replacement ---
-  // Replace an existing key's value.
-  assert(tableSet(&table, takeString("OK", 2), NUMBER_VAL(42.0)));
+  // Replace an existing key's value.It returns false
+  assert(!tableSet(&table, takeString("OK", 2), NUMBER_VAL(42.0)));
   // Retrieve the key to ensure that the value has been replaced.
   assert(tableGet(&table, takeString("OK", 2), &value));
   assert(valuesEqual(value, NUMBER_VAL(42.0)));
@@ -437,6 +439,8 @@ int main(int argc, char *argV[]) {
     tokenTest();
     expressionCompilerTest();
     vmTest();
+    stringHashTest();
+    tableTest();
     return 0;
   }
   char *arg = argV[1];

@@ -23,7 +23,9 @@ static Entry *findEntry(Entry *entries, int capacity, const ObjString *key) {
     bool foundEmpty=entry->key==NULL && IS_NIL(entry->value);
     bool foundTombStone = entry->key == NULL && !IS_NIL(entry->value);
     bool foundValue=entry->key!=NULL;
-    if(foundValue && entry->key==key)return entry;
+    if(foundValue && entry->key->hash==key->hash)return entry; //TODO: This is where book differs from
+							       //my implementation.In book it compare entry->key==key
+							       //where I only compare the hash between them
     else if(foundEmpty)return tombStone!=NULL?tombStone:entry;
     else if(foundTombStone)tombStone=entry;
     index = (index + 1) % capacity;
@@ -37,8 +39,6 @@ static void adjustCapacity(Table *table, int capacity) {
     entries[i].key = NULL;
     entries[i].value = NIL_VAL;
   }
-  table->entries = entries;
-  table->capacity = capacity;
 
   for (int i = 0; i < table->capacity; i++) {
     Entry *entry = &table->entries[i];
@@ -93,7 +93,7 @@ bool tableDelete(Table *table, const ObjString *key) {
   if (table->count == 0)
     return false;
   Entry *entry = findEntry(table->entries, table->capacity, key);
-  if (entry == NULL)
+  if (entry->key == NULL)
     return false;
   entry->key = NULL;
   entry->value = BOOL_VAL(true);

@@ -2,13 +2,17 @@
 #define clox_debug_h
 #include "chunk.h"
 #include "scanner.h"
+#include "table.h"
 #include <customType.h>
 const char *tokenTypeToString(TokenType tt);
 const char *opcodeToString(OpCode opcode);
 
-Str24 valueToString(Value value);
+Str32 valueToString(Value value);
 
-void disassembleChunk(Chunk *chunk, const char *name);
+void disassembleChunk(const Chunk *chunk, const char *name);
 void disassembleToken(void);
-int disassembleInstruction(Chunk *chunk, int offset);
+int disassembleInstruction(const Chunk *chunk, int offset);
+
+void disassembleTable(const Table* table);
 #endif
+

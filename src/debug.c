@@ -1,11 +1,12 @@
 #include "debug.h"
 #include "chunk.h"
+#include "common.h"
 #include "object.h"
 #include "value.h"
 #include <scanner.h>
 #include <stdint.h>
 #include <stdio.h>
-void disassembleChunk(Chunk *chunk, const char *name) {
+void disassembleChunk(const Chunk *chunk, const char *name) {
   printf("--> %s <--\n", name);
   for (int offset = 0; offset < chunk->count;) {
     offset = disassembleInstruction(chunk, offset);
@@ -115,14 +116,15 @@ static int simpleInstruction(const char *name, int offset) {
   printf("%s\n", name);
   return offset + 1;
 }
-static int constantInstruction(const char *name, Chunk *chunk, int offset) {
+static int constantInstruction(const char *name, const Chunk *chunk,
+                               int offset) {
   uint8_t constant = chunk->code[offset + 1];
   printf("%-16s %4d '", name, constant);
   printValue(chunk->constants.values[constant]);
   printf("'\n");
   return offset + 2;
 }
-int disassembleInstruction(Chunk *chunk, int offset) {
+int disassembleInstruction(const Chunk *chunk, int offset) {
   printf("%4d", offset);
   if (offset > 0 &&
       chunk->lines[offset] ==
@@ -200,8 +202,8 @@ const char *opcodeToString(OpCode instruction) {
   }
 }
 
-Str24 valueToString(Value value) {
-  Str24 output;
+Str32 valueToString(Value value) {
+  Str32 output;
   switch (value.type) {
 
   case VAL_BOOL:
@@ -217,4 +219,18 @@ Str24 valueToString(Value value) {
     objectToString(output.core, value);
   }
   return output;
+}
+void disassembleTable(const Table *table) {
+  for (int i = 0; i < table->capacity; i++) {
+    printf("%4d", i);
+    Entry *entry = &table->entries[i];
+    bool isEmpty = entry->key == NULL;
+    if (isEmpty)
+      printf("----------------------");
+    else {
+	    ObjString* nonNullKey=entry->key;
+      printf("%16s (%X): %s\n", nonNullKey->chars, nonNullKey->hash,
+             valueToString(entry->value).core);
+    }
+  }
 }
