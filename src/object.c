@@ -1,9 +1,12 @@
 #include "object.h"
+#include "common.h"
 #include "memory.h"
+#include "table.h"
 #include "value.h"
 #include "vm.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define ALLOCATE_OBJ(type, objectType)                                         \
@@ -25,6 +28,8 @@ static ObjString *allocateString(char *chars, uintptr_t length, uint32_t hash) {
   string->chars = chars;
   string->hash = hash;
 
+  tableSet(&vm.strings, string, NIL_VAL);
+
   return string;
 }
 
@@ -40,12 +45,23 @@ static uint32_t hashString(const char *key, uintptr_t length) {
 // it as string,So it works as move
 ObjString *takeString(char *chars, uintptr_t length) {
   uint32_t hash = hashString(chars, length);
+  ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
+  if (interned != NULL) {
+    if (chars != interned->chars) { //TODO:This might need to remove in future code,Because all the code is parsed
+				    //token of difeerent string,Still keep it.
+      FREE_ARRAY(char, chars, length + 1);
+    }
+    return interned;
+  }
   return allocateString(chars, length, hash);
 }
 // copyString takes the pointer,and copy it.
 // So it doesn't move
 ObjString *copyString(const char *chars, uintptr_t length) {
   uint32_t hash = hashString(chars, length);
+  ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
+  if (interned != NULL)
+    return interned;
   char *heapChars = ALLOCATE(char, length + 1);
   memcpy(heapChars, chars, length);
   heapChars[length] = '\0';

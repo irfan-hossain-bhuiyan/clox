@@ -4,6 +4,7 @@
 #include "debug.h"
 #include "memory.h"
 #include "object.h"
+#include "table.h"
 #include "value.h"
 #include <__stdarg_va_list.h>
 #include <stdarg.h>
@@ -21,10 +22,12 @@ static void resetStack(void) {
 
 void initVM(void) { 
 	resetStack(); 
+	initTable(&vm.strings);
 	vm.objects=NULL;
 }
 void freeVM(void) {
 	freeObjects();
+	freeTable(&vm.strings);
 }
 static Value peek(int distance) { return vm.stackTop[-1 - distance]; }
 static void runtimeError(const char *format, ...) {

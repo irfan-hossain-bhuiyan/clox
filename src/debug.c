@@ -226,7 +226,7 @@ void disassembleTable(const Table *table) {
     Entry *entry = &table->entries[i];
     bool isEmpty = entry->key == NULL;
     if (isEmpty)
-      printf("----------------------");
+      printf("----------------------\n");
     else {
 	    ObjString* nonNullKey=entry->key;
       printf("%16s (%X): %s\n", nonNullKey->chars, nonNullKey->hash,

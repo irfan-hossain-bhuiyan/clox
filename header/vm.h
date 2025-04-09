@@ -2,6 +2,7 @@
 #define clox_vm_h
 
 #include "chunk.h"
+#include "table.h"
 #define STACK_MAX (256)
 typedef enum {
   INTERPRET_OK,
@@ -17,6 +18,7 @@ typedef struct {
   Value *stackTop; // A pointer is kept instead of index,because it is faster to
                    // dereference.
   Obj *objects;
+  Table strings;
 } VM;
 void initVM(void);
 void freeVM(void);

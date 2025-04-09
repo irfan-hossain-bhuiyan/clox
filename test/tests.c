@@ -223,6 +223,17 @@ void tableTest(void) {
 
   bluePrint("All table tests passed successfully.");
 }
+
+void stringInternTest(void) {
+  ObjString *str1 = takeString("Bocchi", 6);
+  ObjString *str2 = takeString("MonoGatari ", 10);
+  ObjString *str3 = takeString("bocchi", 6);
+  ObjString *str4 = takeString("Bocchi", 6);
+  ObjString *str5 = copyString("MonoGatari ", 10);
+  assert(str1 == str4);
+  assert(str2 == str5);
+  assert(str3 != str1);
+}
 // void tableTest(void) {
 //   Table table;
 //   initTable(&table);
@@ -439,6 +450,7 @@ int main(int argc, char *argV[]) {
     tokenTest();
     expressionCompilerTest();
     vmTest();
+    stringInternTest();
     stringHashTest();
     tableTest();
     return 0;
@@ -454,6 +466,8 @@ int main(int argc, char *argV[]) {
     tableTest();
   } else if (strcmp(arg, "strHash") == 0) {
     stringHashTest();
+  } else if (strcmp(arg, "strIntern") == 0) {
+    stringInternTest();
   } else {
     failedExit("Typing error in argument");
   }
