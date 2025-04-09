@@ -71,7 +71,7 @@ void expressionAssert(const char *expression, const OpCode *expressionOpcodes,
                       const Value *expressionConstants) {
   Chunk chunk;
   initChunk(&chunk);
-  bool allOk = compile(expression, &chunk);
+  bool allOk = evaluate(expression, &chunk);
   bluePrint("\nCode: %s\n", expression);
   if (!allOk) {
     failedExit("Trying to compile expression that are not valid.");

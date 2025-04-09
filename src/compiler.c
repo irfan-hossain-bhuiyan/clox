@@ -275,7 +275,7 @@ ParseRule rules[] = {
 static ParseRule *getRule(TokenType type) { return &rules[type]; }
 
 // Returns true if there is no error
-bool compile(const char *source, Chunk *chunk) {
+bool evaluate(const char *source, Chunk *chunk) {
   initScanner(source);
   compilingChunk = chunk;
   parser.haderror = false;
