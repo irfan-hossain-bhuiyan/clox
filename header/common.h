@@ -12,5 +12,5 @@
 #define _Enum_assert(ENUM_LAST_MEMBER,ENUM_SIZE)
 #endif
 // #define DEBUG_PRINT_CODE
-#define DEBUG_TRACE_EXECUTION
+//#define DEBUG_TRACE_EXECUTION
 #endif
