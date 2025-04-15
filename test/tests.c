@@ -110,11 +110,30 @@ void expressionAssert(const char *expression, const OpCode *expressionOpcodes,
   // Checking for constant
   freeChunk(&chunk);
 }
-void exprEvalAssert(const char *expr, Value expectedOutput) {
+static void statEvalAssert(const char *expr, Value expectedOutput) {
+  initVM();
+  printf("\nThe statement:\n%s", expr);
+  InterpretResult result = interpret(expr);
+  switch (result) {
+  case INTERPRET_OK:
+    break;
+  case INTERPRET_RUNTIME_ERROR:
+    failedExit("tests outputs have runtime error.");
+    break;
+  case INTERPRET_COMPILE_ERROR:
+    failedExit("tests output have compiletime error.");
+    break;
+    Value returnedOutput = getLastReturn();
+    ASSERT(valuesEqual(returnedOutput, expectedOutput));
+    freeVM();
+  }
+}
+
+static void exprEvalAssert(const char *expr, Value expectedOutput) {
 
   initVM();
   printf("\n\nThe expression: \"%s\"\n", expr);
-  InterpretResult result = interpret(expr);
+  InterpretResult result = evalExpr(expr);
   switch (result) {
 
   case INTERPRET_OK:
@@ -129,10 +148,17 @@ void exprEvalAssert(const char *expr, Value expectedOutput) {
   ASSERT(valuesEqual(returnedOutput, expectedOutput));
   freeVM();
 }
+static void printEvalAssert(const char *expr, const char *output) {
+  char buffer[128];
+  beginScanPrint(buffer, 128);
+  interpret(expr);
+  endScanPrint();
+  ASSERT(strcmp(buffer, output) == 0);
+}
 void exprErrorAssert(const char *expr, InterpretResult error) {
   initVM();
   printf(TO_BLUE("Code is->\"%s\"\n"), expr);
-  InterpretResult result = interpret(expr);
+  InterpretResult result = evalExpr(expr);
   ASSERT(error == result);
   printf("All ok\n");
   freeVM();
@@ -290,6 +316,29 @@ void vmTest(void) {
   exprErrorAssert("\"irfan\">\"everyone else\"", INTERPRET_RUNTIME_ERROR);
 
   greenPrint("\n VM is working \n");
+}
+
+static void varVMTest(void) {
+  const char *CODE0 = "var a=10;\n"
+                      "var b= 15;\n"
+                      "return a+b;";
+  statEvalAssert(CODE0, NUMBER_VAL(25));
+  const char *CODE1 = "var a=\"This is Ok\";\n"
+                      "var b=a+\"Extra added\";\n"
+                      "return a+b+b;";
+  statEvalAssert(CODE1, STRING_VAL("This is Ok\nExtra added\nExtra added\n"));
+  statEvalAssert("var a;return a;", NIL_VAL);
+}
+
+static void printVMtest(void) {
+  const char *CODE0 = "var a=10;\n"
+                      "var b= 15;\n"
+                      "print(a+b);";
+  const char *CODE1 = "var a=\"This is Ok\";\n"
+                      "var b=a+\"Extra added\";\n"
+                      "print(a+b+b);";
+  printEvalAssert(CODE0, "25");
+  printEvalAssert(CODE1, "This is Ok\nExtra added\nExtra added\n");
 }
 
 static void tokenTest(void) {
@@ -468,6 +517,10 @@ int main(int argc, char *argV[]) {
     stringHashTest();
   } else if (strcmp(arg, "strIntern") == 0) {
     stringInternTest();
+  } else if (strcmp(arg, "vmVarDecl") == 0) {
+    varVMTest();
+  } else if (strcmp(arg, "vmPrint") == 0) {
+    //printVMtest();
   } else {
     failedExit("Typing error in argument");
   }

@@ -18,12 +18,15 @@ typedef struct {
   Value *stackTop; // A pointer is kept instead of index,because it is faster to
                    // dereference.
   Obj *objects;
+  Table globals;
   Table strings;
+
 } VM;
 void initVM(void);
 void freeVM(void);
 void push(Value value);
 Value pop(void);
+InterpretResult evalExpr(const char *source);
 InterpretResult interpret(const char *source);
 Value getLastReturn(void);
 #endif

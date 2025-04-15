@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include "common.h"
 #include "memory.h"
 #include "value.h"
 void initChunk(Chunk *chunk){
@@ -30,4 +31,9 @@ void freeChunk(Chunk *chunk){
 int addConstant(Chunk *chunk, Value value){
 	writeValueArray(&chunk->constants, value);
 	return chunk->constants.count-1;
+}
+OpCode byteToOpCode(uint8_t instruction) { 
+	if(instruction<OP_EOE){return instruction;}
+	sprintf(stderr, "The byte is invalid,It can't be turned to OpCode.");
+	exit(EXIT_FAILURE);
 }

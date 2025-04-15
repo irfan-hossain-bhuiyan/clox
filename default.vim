@@ -16,13 +16,14 @@ endif
 badd +23 header/table.h
 badd +1 ~/projects/clox/src/table.c
 badd +21 header/vm.h
-badd +30 ~/projects/clox/src/vm.c
+badd +65 ~/projects/clox/src/vm.c
 badd +50 src/object.c
 badd +8 header/common.h
-badd +231 test/tests.c
+badd +128 test/tests.c
 badd +43 CMakeLists.txt
 badd +229 src/debug.c
-badd +0 src/compiler.c
+badd +305 src/compiler.c
+badd +1 ~/projects/clox/header/compiler.h
 argglobal
 %argdel
 set stal=2
@@ -63,12 +64,6 @@ setlocal foldlevel=0
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldenable
-1
-normal! zo
-7
-normal! zo
-12
-normal! zo
 let s:l = 21 - ((20 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
@@ -132,7 +127,7 @@ normal! 070|
 tabnext
 edit src/compiler.c
 argglobal
-balt src/object.c
+balt test/tests.c
 setlocal foldmethod=expr
 setlocal foldexpr=nvim_treesitter#foldexpr()
 setlocal foldmarker={{{,}}}
@@ -141,16 +136,16 @@ setlocal foldlevel=0
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldenable
-let s:l = 278 - ((12 * winheight(0) + 14) / 28)
+let s:l = 278 - ((13 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 278
 normal! 06|
 tabnext
-edit src/debug.c
+edit src/compiler.c
 argglobal
-balt header/common.h
+balt test/tests.c
 setlocal foldmethod=expr
 setlocal foldexpr=nvim_treesitter#foldexpr()
 setlocal foldmarker={{{,}}}
@@ -159,12 +154,12 @@ setlocal foldlevel=0
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldenable
-let s:l = 229 - ((20 * winheight(0) + 14) / 28)
+let s:l = 304 - ((22 * winheight(0) + 14) / 28)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 229
-normal! 037|
+keepjumps 304
+normal! 0
 tabnext
 edit src/object.c
 argglobal
@@ -183,7 +178,7 @@ keepjumps exe s:l
 normal! zt
 keepjumps 72
 normal! 0
-tabnext 6
+tabnext 7
 set stal=1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
   silent exe 'bwipe ' . s:wipebuf

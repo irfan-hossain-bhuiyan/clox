@@ -134,7 +134,7 @@ int disassembleInstruction(const Chunk *chunk, int offset) {
   } else {
     printf("%4d ", chunk->lines[offset]);
   }
-  uint8_t instruction = chunk->code[offset];
+  OpCode instruction = byteToOpCode(chunk->code[offset]);
   switch (instruction) {
   case OP_RETURN:
     return simpleInstruction("OP RETURN", offset);
@@ -164,9 +164,17 @@ int disassembleInstruction(const Chunk *chunk, int offset) {
     return simpleInstruction("OP_FALSE", offset);
   case OP_NOT:
     return simpleInstruction("OP_NOT", offset);
-  default:
-    printf("Unknown opcode %d\n", instruction);
-    return offset + 1;
+  case OP_PRINT:
+    return simpleInstruction("OP_PRINT", offset);
+  case OP_POP:
+    return simpleInstruction("OP_POP", offset);
+  case OP_DEFINE_GLOBAL:
+    return constantInstruction("OP_DEFINE_GLOBAL", chunk, offset);
+  case OP_EOE:
+    return simpleInstruction("OP_EOE", offset);
+  case OP_GET_GLOBAL:
+    return constantInstruction("OP_GET_GLOBAL", chunk,offset);
+    break;
   }
 }
 const char *opcodeToString(OpCode instruction) {
@@ -199,6 +207,17 @@ const char *opcodeToString(OpCode instruction) {
     return "OP_LESS";
   case OP_NOT:
     return "OP_NOT";
+  case OP_PRINT:
+    return "OP_PRINT";
+  case OP_POP:
+    return "OP_POP";
+  case OP_DEFINE_GLOBAL:
+    return "OP_DEFINE_GLOBAL";
+  case OP_EOE:
+    return "OP_EOE";
+  case OP_GET_GLOBAL:
+    return "OP_GET_GLOBAL";
+    break;
   }
 }
 
@@ -228,9 +247,69 @@ void disassembleTable(const Table *table) {
     if (isEmpty)
       printf("----------------------\n");
     else {
-	    ObjString* nonNullKey=entry->key;
+      ObjString *nonNullKey = entry->key;
       printf("%16s (%X): %s\n", nonNullKey->chars, nonNullKey->hash,
              valueToString(entry->value).core);
     }
   }
+}
+
+#include <unistd.h>  // For pipe(), dup(), dup2(), read(), close()
+#include <stdio.h>   // For stdout, perror()
+#include <stdlib.h>  // For exit()
+
+// Static variables to maintain state between function calls
+static int pipe_read_fd;       // Reading end of the pipe
+static int original_stdout;    // Saved original stdout file descriptor
+static char *capture_buffer;   // Pointer to the user-provided buffer
+static size_t capture_size;    // Size of the buffer
+
+void beginScanPrint(char *buffer, size_t size) {
+    // Store the buffer and its size
+    capture_buffer = buffer;
+    capture_size = size;
+
+    // Create a pipe
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        perror("pipe failed");
+        exit(1);
+    }
+    pipe_read_fd = pipefd[0];  // Reading end of the pipe
+
+    // Save the current stdout
+    original_stdout = dup(STDOUT_FILENO);
+    if (original_stdout == -1) {
+        perror("dup failed");
+        exit(1);
+    }
+
+    // Redirect stdout to the writing end of the pipe
+    if (dup2(pipefd[1], STDOUT_FILENO) == -1) {
+        perror("dup2 failed");
+        exit(1);
+    }
+
+    // Close the writing end since stdout now uses it
+    close(pipefd[1]);
+}
+
+void endScanPrint(void) {
+    // Restore the original stdout
+    if (dup2(original_stdout, STDOUT_FILENO) == -1) {
+        perror("dup2 restore failed");
+        exit(1);
+    }
+    close(original_stdout);
+
+    // Read from the pipe into the buffer, leaving space for null terminator
+    ssize_t bytes_read = read(pipe_read_fd, capture_buffer, capture_size - 1);
+    if (bytes_read > 0) {
+        capture_buffer[bytes_read] = '\0';  // Null-terminate the string
+    } else {
+        capture_buffer[0] = '\0';  // If no data or error, empty string
+    }
+
+    // Clean up by closing the reading end of the pipe
+    close(pipe_read_fd);
 }

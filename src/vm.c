@@ -1,5 +1,6 @@
 #include "vm.h"
 #include "chunk.h"
+#include "common.h"
 #include "compiler.h"
 #include "debug.h"
 #include "memory.h"
@@ -12,22 +13,23 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 VM vm;
 
 // Clear the entire stack
 static void resetStack(void) {
   vm.stackTop = vm.stack; // This means the stack is empty.
 }
-
-
-void initVM(void) { 
-	resetStack(); 
-	initTable(&vm.strings);
-	vm.objects=NULL;
+void initVM(void) {
+  resetStack();
+  initTable(&vm.strings);
+  initTable(&vm.globals);
+  vm.objects = NULL;
 }
 void freeVM(void) {
-	freeObjects();
-	freeTable(&vm.strings);
+  freeObjects();
+  freeTable(&vm.globals);
+  freeTable(&vm.strings);
 }
 static Value peek(int distance) { return vm.stackTop[-1 - distance]; }
 static void runtimeError(const char *format, ...) {
@@ -48,25 +50,27 @@ static bool isFalsey(Value value) {
   return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
-static void concatenate(void){
-	ObjString* b=AS_STRING(pop());
-	ObjString* a=AS_STRING(pop());
-	int length=a->length+b->length;
-	char* chars = ALLOCATE(char, length+1);
-	memcpy(chars,a->chars,a->length);
-	memcpy(chars+a->length,b->chars,b->length);
-	chars[length]='\0';
-	ObjString* result=takeString(chars,length);
-	push(OBJ_VAL(result));
+static void concatenate(void) {
+  ObjString *b = AS_STRING(pop());
+  ObjString *a = AS_STRING(pop());
+  uintptr_t length = a->length + b->length;
+  char *chars = ALLOCATE(char, length + 1);
+  memcpy(chars, a->chars, a->length);
+  memcpy(chars + a->length, b->chars, b->length);
+  chars[length] = '\0';
+  ObjString *result = takeString(chars, length);
+  push(OBJ_VAL(result));
 }
 static Value lastReturned = NIL_VAL;
 // Save the last return output of the code
 static void saveReturn(void) { lastReturned = peek(0); }
+
 Value getLastReturn(void) { return lastReturned; }
 
 static InterpretResult run(void) {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_STRING() (AS_STRING(READ_CONSTANT()))
 #define BINARY_OP(valueType, op)                                               \
   do {                                                                         \
     if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {                          \
@@ -92,8 +96,7 @@ static InterpretResult run(void) {
     printf("Instruction:        ");
     disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
 #endif
-    uint8_t instruction;
-    switch (instruction = READ_BYTE()) {
+    switch (byteToOpCode(READ_BYTE())) {
     case OP_CONSTANT: {
       Value constant = READ_CONSTANT();
       push(constant);
@@ -113,8 +116,8 @@ static InterpretResult run(void) {
         double a = ((pop()).as.number);
         push(((Value){VAL_NUMBER, {.number = (a + b)}}));
 
-      }else if(IS_STRING(peek(0)) && IS_STRING(peek(1))){
-	concatenate();
+      } else if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+        concatenate();
       } else {
 
         runtimeError("Operands must be numbers or Strings");
@@ -163,19 +166,58 @@ static InterpretResult run(void) {
     }
     case OP_RETURN: {
       saveReturn();
-      printValue(pop());
-      printf("\n");
       return INTERPRET_OK;
     }
+    case OP_PRINT: {
+      printValue(pop());
+      printf("\n");
+      break;
+    }
+    case OP_POP:
+      pop();
+      break;
+    case OP_DEFINE_GLOBAL: {
+      ObjString *name = READ_STRING();
+      tableSet(&vm.globals, name, peek(0));
+      pop();
+      break;
+    }
+    case OP_GET_GLOBAL: {
+      ObjString *name = READ_STRING();
+      Value value;
+      if(!tableGet(&vm.globals, name, &value)){
+	runtimeError("Undefined varable '%s'",name->chars);
+	return INTERPRET_RUNTIME_ERROR;
+      }
+      push(value);
+      break;
+    }
+    case OP_EOE:
+      sprintf(stderr, "Returning EOE,When it shoubn't be used.");
+      exit(EXIT_FAILURE);
     }
   }
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
+}
+InterpretResult evalExpr(const char *source) {
+  Chunk chunk;
+  initChunk(&chunk);
+  if (!evaluate(source, &chunk)) {
+    freeChunk(&chunk);
+    return INTERPRET_COMPILE_ERROR;
+  }
+  vm.chunk = &chunk;
+  vm.ip = vm.chunk->code;
+  InterpretResult result = run();
+  freeChunk(&chunk);
+  return result;
 }
 InterpretResult interpret(const char *source) {
   Chunk chunk;
   initChunk(&chunk);
-  if (!evaluate(source, &chunk)) {
+  if (!compile(source, &chunk)) {
     freeChunk(&chunk);
     return INTERPRET_COMPILE_ERROR;
   }

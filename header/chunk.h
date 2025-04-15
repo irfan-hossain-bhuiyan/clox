@@ -18,6 +18,15 @@ typedef enum{
 	OP_SUBSTRACT,
 	OP_DIVIDE,
 	OP_MULTIPLY,
+	OP_PRINT,
+	OP_POP,
+	OP_DEFINE_GLOBAL,
+	OP_GET_GLOBAL,
+	OP_EOE, //end of enum,
+		//This is a trick to check the length of enum,
+		//So We know if it is changed in the future,
+		//We can do static check with it,
+		//Also a function that converts integer to Enum for type safety.
 } OpCode; // OpCode stands for operation code.
 // The thing is I would make an another struct for code and lines,
 // because the size of them are equivalent.
@@ -36,4 +45,5 @@ void initChunk(Chunk* chunk);
 void writeChunk(Chunk* chunk,uint8_t byte,int line);
 void freeChunk(Chunk* chunk);
 int addConstant(Chunk* chunk,Value value);
+OpCode byteToOpCode(uint8_t instruction);
 #endif

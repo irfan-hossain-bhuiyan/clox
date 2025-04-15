@@ -2,11 +2,12 @@
 #include "debug.h"
 #include "scanner.h"
 #include "value.h"
+#include <compiler.h>
+#include <object.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <object.h>
-
 // TODO:The parser has two token as input.
 // In rlox,I used the source as reference.And a Vec<Error> for all error.
 typedef struct {
@@ -28,6 +29,10 @@ typedef enum {
   PREC_CALL,        // . ()
   PREC_PRIMARY,
 } Precedece;
+
+static void expression(void);
+static void statement(void);
+static void declaration(void);
 
 Chunk *compilingChunk;
 static Chunk *currentChunk(void) { return compilingChunk; }
@@ -70,6 +75,15 @@ static void advance(void) {
     errorAtCurrent(parser.current.start);
   }
 }
+
+static uint8_t makeConstant(Value value) {
+  int constant = addConstant(currentChunk(), value);
+  if (constant > UINT8_MAX) {
+    error("Too many constant in one chunk");
+    return 0;
+  }
+  return (uint8_t)constant;
+}
 static void consume(TokenType type, const char *message) {
   if (parser.current.type == type) {
     advance();
@@ -77,6 +91,15 @@ static void consume(TokenType type, const char *message) {
   }
   errorAtCurrent(message);
 }
+static bool check(TokenType type) { return type == parser.current.type; }
+static bool match(TokenType type) {
+  if (check(type)) {
+    advance();
+    return true;
+  }
+  return false;
+}
+
 // This is to parse the code,and adding instruction in the chunk.
 static void emitByte(uint8_t byte) {
   writeChunk(currentChunk(), byte, parser.previous.line);
@@ -125,18 +148,89 @@ static void parsePrecedence(Precedece precedence) {
   }
 }
 static void expression(void) { parsePrecedence(PREC_ASSIGNMENT); }
+static void printStatement(void) {
+  expression();
+  consume(TOKEN_SEMICOLON, "Missing Semicolon");
+  emitByte(OP_PRINT);
+}
+static void defineVariable(uint8_t global) {
+  emitBytes(OP_DEFINE_GLOBAL, global);
+}
+static uint8_t indentifierConstant(Token *name) {
+  return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+}
+static uint8_t parseVariable(const char *errorMessage) {
+  consume(TOKEN_IDENTIFIER, errorMessage);
+  return indentifierConstant(&parser.previous);
+}
+static void expressionStatement(void) {
+  expression();
+  consume(TOKEN_SEMICOLON, "Missing SemiColon");
+  emitByte(OP_POP);
+}
+static void returnStatement(void) {
+  if (match(TOKEN_SEMICOLON)) {
+    emitByte(OP_NIL);
+    return;
+  }
+  expression();
+  consume(TOKEN_SEMICOLON, "Missing SemiColon");
+}
+static void varDeclaration(void) {
+  uint8_t global = parseVariable("Expect variable name,Noting given.");
+  if (match(TOKEN_EQUAL)) {
+    expression();
+  } else {
+    emitByte(OP_NIL);
+  }
+  consume(TOKEN_SEMICOLON, "Expect semicolon after varuable declaration.");
+  defineVariable(global);
+}
+static void statement(void) {
+  if (match(TOKEN_PRINT)) {
+    printStatement();
+  } else if (match(TOKEN_RETURN)) {
+    returnStatement();
+  } else {
+    expressionStatement();
+  }
+}
+static void synchronize(void) {
+  parser.panicmode = false;
+  while (parser.current.type != TOKEN_EOF) {
+    if (parser.current.type == TOKEN_SEMICOLON)
+      return;
 
+    switch (parser.current.type) {
+    case TOKEN_WHILE:
+    case TOKEN_PRINT:
+    case TOKEN_FUN:
+    case TOKEN_CLASS:
+    case TOKEN_FOR:
+    case TOKEN_IF:
+    case TOKEN_VAR:
+    case TOKEN_RETURN:
+      return;
+    default: // DO nothing
+        ;
+    }
+
+    advance();
+  }
+}
+static void declaration(void) {
+  if (match(TOKEN_VAR)) {
+    varDeclaration();
+  } else {
+    statement();
+  }
+  if (parser.panicmode) {
+    synchronize();
+  }
+}
 static void grouping(void) {
   expression();
   consume(TOKEN_RIGHT_PRACE, "Expected ')' in expression.");
-}
-static uint8_t makeConstant(Value value) {
-  int constant = addConstant(currentChunk(), value);
-  if (constant > UINT8_MAX) {
-    error("Too many constant in one chunk");
-    return 0;
-  }
-  return (uint8_t)constant;
 }
 
 static void emitConstant(Value val) {
@@ -152,7 +246,11 @@ static void string(void) {
   emitConstant(OBJ_VAL(
       copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
-
+static void namedVariable(Token name) {
+  uintptr_t arg = indentifierConstant(&name);
+  emitBytes(OP_GET_GLOBAL, arg);
+}
+static void variable(void) { namedVariable(parser.previous); }
 static void
 unary(void) { // The consume of - expression came before unary() function call
   TokenType operatorType = parser.previous.type;
@@ -249,7 +347,7 @@ ParseRule rules[] = {
     [TOKEN_GREATER_EQUAL] = {NULL, binary, PREC_COMPARASION},
     [TOKEN_LESS] = {NULL, binary, PREC_COMPARASION},
     [TOKEN_LESS_EQUAL] = {NULL, binary, PREC_COMPARASION},
-    [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
+    [TOKEN_IDENTIFIER] = {variable, NULL, PREC_NONE},
     [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
@@ -287,17 +385,17 @@ bool evaluate(const char *source, Chunk *chunk) {
                                         // givenToken,else return error
   endCompiler();
   return !parser.haderror;
-  //	int line=-1;
-  //	for(;;){
-  //		Token token=scanToken();
-  //		if(token.line!=line){
-  //			printf("%4d",token.line);
-  //			line=token.line;
-  //		}
-  //		else{
-  //			printf("  |");
-  //		}
-  //		printf("%2d '%.*s'\n",token.type,token.length,token.start);
-  //		if (token.type==TOKEN_EOF){break;}
-  //	}
+}
+
+bool compile(const char *source, Chunk *chunk) {
+  initScanner(source);
+  compilingChunk = chunk;
+  parser.haderror = false;
+  parser.panicmode = false;
+  advance();
+  while (!match(TOKEN_EOF)) {
+    declaration();
+  }
+  endCompiler();
+  return !parser.haderror;
 }

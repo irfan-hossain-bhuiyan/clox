@@ -14,5 +14,9 @@ void disassembleToken(void);
 int disassembleInstruction(const Chunk *chunk, int offset);
 
 void disassembleTable(const Table* table);
+
+
+void beginScanPrint(char *buffer, size_t size);
+void endScanPrint(void);
 #endif
 

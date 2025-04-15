@@ -74,7 +74,7 @@ static void repl(void) {
       printf("\n");
       break;
     }
-    interpret(line);
+    evalExpr(line);
   }
 }
 //This function read from a file path and returns the buufer as a pointer.
@@ -105,7 +105,7 @@ static char* readFile(const char* path){ //This one is to just read the file,not
 }
 static void runFile(const char* path){
 	char* source=readFile(path);
-	InterpretResult result=interpret(source);
+	InterpretResult result=evalExpr(source);
 	free(source);
 	if(result==INTERPRET_COMPILE_ERROR)exit(65);
 	if(result==INTERPRET_RUNTIME_ERROR)exit(70);
