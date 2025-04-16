@@ -201,6 +201,8 @@ static void exprEvalAssert(const char *expr, Value expectedOutput) {
     break;
   }
   Value returnedOutput = getLastReturn();
+  printf("Returned Output:%s \n",valueToString(returnedOutput).core);
+  printf("Expected Output:%s \n",valueToString(expectedOutput).core);
   ASSERT(valuesEqual(returnedOutput, expectedOutput));
   freeVM();
 }

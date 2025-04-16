@@ -7,7 +7,7 @@
 const char *tokenTypeToString(TokenType tt);
 const char *opcodeToString(OpCode opcode);
 
-Str32 valueToString(Value value);
+Str64 valueToString(Value value);
 
 void disassembleChunk(const Chunk *chunk, const char *name);
 void disassembleToken(void);

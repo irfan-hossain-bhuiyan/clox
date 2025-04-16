@@ -221,8 +221,8 @@ const char *opcodeToString(OpCode instruction) {
   }
 }
 
-Str32 valueToString(Value value) {
-  Str32 output;
+Str64 valueToString(Value value) {
+  Str64 output;
   switch (value.type) {
 
   case VAL_BOOL:

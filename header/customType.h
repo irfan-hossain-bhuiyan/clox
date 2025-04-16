@@ -1,3 +1,3 @@
 typedef struct{
-	char core[32];
-}Str32;
+	char core[64];
+}Str64;
