@@ -82,7 +82,8 @@ static void chunkAssert(const Chunk *chunk, const OpCode *opCodes,
     // Different printing if the next code is constant pointer
     if (generatedInstruction == OP_CONSTANT ||
         generatedInstruction == OP_DEFINE_GLOBAL ||
-        generatedInstruction == OP_GET_GLOBAL) {
+        generatedInstruction == OP_GET_GLOBAL ||
+        generatedInstruction == OP_SET_GLOBAL) {
       i++;
       generatedInstruction = chunk->code[i];
       expectedInstruction = opCodes[i];
@@ -125,7 +126,6 @@ void statCompileAssert(const char *code, const OpCode *opCodes,
   if (!allOk) {
     failedExit("Trying to compile expression that are not valid.");
   }
-  disassembleChunk(&chunk, "Test statement Chunk");
   chunkAssert(&chunk, opCodes, constants);
   freeChunk(&chunk);
 }
@@ -162,9 +162,61 @@ void statCompileTest(void) {
   };
   const Value STAT_CONSTANT1[] = {
       STRING_VAL("a"), NUMBER_VAL(10),  STRING_VAL("b"), NUMBER_VAL(15),
-      STRING_VAL("c"), STRING_VAL("a"), STRING_VAL("b"), 
+      STRING_VAL("c"), STRING_VAL("a"), STRING_VAL("b"),
   };
   statCompileAssert(CODE1, STAT_OPCODE1, STAT_CONSTANT1);
+  const char *CODE2 = "var a=10;\n"
+                      "a=5+a;\n";
+  const OpCode STAT_OPCODE2[] = {
+      OP_CONSTANT, 1,      OP_DEFINE_GLOBAL, 0, OP_CONSTANT,   3, OP_GET_GLOBAL,
+      4,           OP_ADD, OP_SET_GLOBAL,    2, OP_GET_GLOBAL, 2, OP_POP,
+      OP_RETURN};
+  const Value STAT_CONSTANT2[] = {
+      STRING_VAL("a"), NUMBER_VAL(10),  STRING_VAL("a"),
+      NUMBER_VAL(5),   STRING_VAL("a"),
+  };
+  statCompileAssert(CODE2, STAT_OPCODE2, STAT_CONSTANT2);
+
+  const char *CODE3 = "var a = 10;\n"
+                      "a=a=12;";
+  const OpCode STAT_OPCODE3[] = {
+      OP_CONSTANT,   1, OP_DEFINE_GLOBAL, 0,         OP_CONSTANT,   4,
+      OP_SET_GLOBAL, 3, OP_GET_GLOBAL,    3,         OP_SET_GLOBAL, 2,
+      OP_GET_GLOBAL, 2, OP_POP,           OP_RETURN,
+  };
+  const Value STAT_CONSTANT3[] = {
+      STRING_VAL("a"), NUMBER_VAL(10), STRING_VAL("a"),
+      STRING_VAL("a"), NUMBER_VAL(12),
+  };
+  statCompileAssert(CODE3, STAT_OPCODE3, STAT_CONSTANT3);
+  const char *CODE4 = "var a = 10;\n"
+                      "a=1+(a=12);";
+  const OpCode STAT_OPCODE4[] = {
+      OP_CONSTANT,
+      1,
+      OP_DEFINE_GLOBAL,
+      0,
+      OP_CONSTANT,
+      3,
+      OP_CONSTANT,
+      5,
+      OP_SET_GLOBAL,
+      4,
+      OP_GET_GLOBAL,
+      4,
+      OP_ADD,
+      OP_SET_GLOBAL,
+      2,
+      OP_GET_GLOBAL,
+      2,
+      OP_POP,
+      OP_RETURN,
+  };
+  const Value STAT_CONSTANT4[] = {
+      STRING_VAL("a"), NUMBER_VAL(10),  STRING_VAL("a"),
+      NUMBER_VAL(1),   STRING_VAL("a"), NUMBER_VAL(12),
+  };
+  statCompileAssert(CODE4, STAT_OPCODE4, STAT_CONSTANT4);
 }
 static void statEvalAssert(const char *expr, Value expectedOutput) {
   initVM();
@@ -172,6 +224,7 @@ static void statEvalAssert(const char *expr, Value expectedOutput) {
   InterpretResult result = interpret(expr);
   switch (result) {
   case INTERPRET_OK:
+    bluePrint("Passed\n");
     break;
   case INTERPRET_RUNTIME_ERROR:
     failedExit("tests outputs have runtime error.");
@@ -183,6 +236,13 @@ static void statEvalAssert(const char *expr, Value expectedOutput) {
     ASSERT(valuesEqual(returnedOutput, expectedOutput));
     freeVM();
   }
+}
+
+static void statErrorAssert(const char *expr, InterpretResult expectedResult) {
+  initVM();
+  printf("\nThe statement:\n%s", expr);
+  InterpretResult generatedResult = interpret(expr);
+  ASSERT(generatedResult == expectedResult);
 }
 
 static void exprEvalAssert(const char *expr, Value expectedOutput) {
@@ -201,8 +261,8 @@ static void exprEvalAssert(const char *expr, Value expectedOutput) {
     break;
   }
   Value returnedOutput = getLastReturn();
-  printf("Returned Output:%s \n",valueToString(returnedOutput).core);
-  printf("Expected Output:%s \n",valueToString(expectedOutput).core);
+  printf("Returned Output:%s \n", valueToString(returnedOutput).core);
+  printf("Expected Output:%s \n", valueToString(expectedOutput).core);
   ASSERT(valuesEqual(returnedOutput, expectedOutput));
   freeVM();
 }
@@ -343,7 +403,7 @@ void stringInternTest(void) {
 //   freeTable(&table);
 // }
 
-void vmExprTest(void) {
+void exprVMTest(void) {
   exprEvalAssert("2+3*(3*3)", NUMBER_VAL(29));
   exprEvalAssert("2+2+2*0", NUMBER_VAL(4));
   exprEvalAssert("2<3.1", BOOL_VAL(true));
@@ -380,6 +440,13 @@ static void varVMTest(void) {
                       "return a+b+b;";
   statEvalAssert(CODE1, STRING_VAL("This is Ok\nExtra added\nExtra added\n"));
   statEvalAssert("var a;return a;", NIL_VAL);
+  const char *CODE2 = "var a=10;\n"
+                      "a=1+(a=12);\n"
+                      "return a;\n";
+  statEvalAssert(CODE2, NUMBER_VAL(13));
+  const char *CODE3 = "var a=10;\n"
+                      "a=1+a=12;\n";
+  statErrorAssert(CODE3, INTERPRET_COMPILE_ERROR);
 }
 
 static void tokenTest(void) {
@@ -482,7 +549,7 @@ static void exprCompileTest(void) {
   const OpCode EXPRESSION_OPCODE4[] = {
       OP_FALSE, OP_FALSE, OP_EQUAL, OP_NOT, OP_RETURN,
   };
-  const Value EXPRESSION_CONSTANT4[] = {};
+  const Value EXPRESSION_CONSTANT4[] = {0};
 
   expressionCompileAssert(EXPRESSION4, EXPRESSION_OPCODE4,
                           EXPRESSION_CONSTANT4);
@@ -549,7 +616,7 @@ int main(int argc, char *argV[]) {
     tokenTest();
     exprCompileTest();
     statCompileTest();
-    vmExprTest();
+    exprVMTest();
     varVMTest();
     stringInternTest();
     stringHashTest();
@@ -564,7 +631,7 @@ int main(int argc, char *argV[]) {
   } else if (strcmp(arg, "compileStatement") == 0) {
     statCompileTest();
   } else if (strcmp(arg, "vmExpr") == 0) {
-    vmExprTest();
+    exprVMTest();
   } else if (strcmp(arg, "table") == 0) {
     tableTest();
   } else if (strcmp(arg, "strHash") == 0) {

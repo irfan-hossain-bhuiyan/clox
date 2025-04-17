@@ -22,6 +22,7 @@ typedef enum{
 	OP_POP,
 	OP_DEFINE_GLOBAL,
 	OP_GET_GLOBAL,
+	OP_SET_GLOBAL,
 	OP_EOE, //end of enum,
 		//This is a trick to check the length of enum,
 		//So We know if it is changed in the future,

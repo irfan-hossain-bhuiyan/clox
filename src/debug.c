@@ -170,11 +170,14 @@ int disassembleInstruction(const Chunk *chunk, int offset) {
     return simpleInstruction("OP_POP", offset);
   case OP_DEFINE_GLOBAL:
     return constantInstruction("OP_DEFINE_GLOBAL", chunk, offset);
-  case OP_EOE:
-    return simpleInstruction("OP_EOE", offset);
   case OP_GET_GLOBAL:
     return constantInstruction("OP_GET_GLOBAL", chunk,offset);
     break;
+  case OP_SET_GLOBAL:
+    return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+  case OP_EOE:
+    return simpleInstruction("OP_EOE", offset);
+
   }
 }
 const char *opcodeToString(OpCode instruction) {
@@ -217,6 +220,9 @@ const char *opcodeToString(OpCode instruction) {
     return "OP_EOE";
   case OP_GET_GLOBAL:
     return "OP_GET_GLOBAL";
+    break;
+  case OP_SET_GLOBAL:
+    return "OP_SET_GLOBAL";
     break;
   }
 }

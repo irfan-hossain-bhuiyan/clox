@@ -10,11 +10,12 @@
 static void freeObject(Obj *object) {
   switch (object->type) {
 
-  case OBJ_STRING:
+  case OBJ_STRING: {
     ObjString *string = (ObjString *)object;
     FREE_ARRAY(char, string->chars, string->length + 1);
     FREE(ObjString, object);
     break;
+  }
   }
 }
 
@@ -22,6 +23,9 @@ void *reallocate(void *pointer, size_t oldsize,
                  size_t newsize) { // It basically says not to new library
                                    // function openly,You don't know when you
                                    // need to edit it.
+                                   //
+  (void)oldsize; // I don't know what the oldSize is used for,But it is in the
+                 // book.
   if (newsize == 0) {
     free(pointer);
     return NULL;

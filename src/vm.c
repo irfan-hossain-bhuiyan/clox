@@ -2,7 +2,6 @@
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
-#include "debug.h"
 #include "memory.h"
 #include "object.h"
 #include "table.h"
@@ -185,11 +184,20 @@ static InterpretResult run(void) {
     case OP_GET_GLOBAL: {
       ObjString *name = READ_STRING();
       Value value;
-      if(!tableGet(&vm.globals, name, &value)){
-	runtimeError("Undefined varable '%s'",name->chars);
-	return INTERPRET_RUNTIME_ERROR;
+      if (!tableGet(&vm.globals, name, &value)) {
+        runtimeError("Undefined varable '%s'", name->chars);
+        return INTERPRET_RUNTIME_ERROR;
       }
       push(value);
+      break;
+    }
+    case OP_SET_GLOBAL: {
+      ObjString *name = READ_STRING();
+      if (tableSet(&vm.globals, name, peek(0))) {
+        tableDelete(&vm.globals, name);
+        runtimeError("Undefined variable '%s'.", name->chars);
+        return INTERPRET_RUNTIME_ERROR;
+      }
       break;
     }
     case OP_EOE:

@@ -1,5 +1,4 @@
 #include "chunk.h"
-#include "debug.h"
 #include "scanner.h"
 #include "value.h"
 #include <compiler.h>
@@ -119,7 +118,7 @@ static void endCompiler(void) {
 #endif
 }
 
-typedef void (*ParseFn)(void);
+typedef void (*ParseFn)(bool);
 typedef struct {
   ParseFn prefix;
   ParseFn infix;
@@ -140,11 +139,15 @@ static void parsePrecedence(Precedece precedence) {
     error("Expected Expression");
     return;
   }
-  prefixRule();
+  bool canAssign = precedence <= PREC_ASSIGNMENT;
+  prefixRule(canAssign);
   while (precedence <= getRule(parser.current.type)->precedence) {
     advance();
     ParseFn infixRule = getRule(parser.previous.type)->infix;
-    infixRule();
+    infixRule(canAssign);
+  }
+  if (canAssign && match(TOKEN_EQUAL)) {
+    error("Invalid assignment target.As '=' has lower precedence,Surround it with bracket.");
   }
 }
 static void expression(void) { parsePrecedence(PREC_ASSIGNMENT); }
@@ -228,7 +231,8 @@ static void declaration(void) {
     synchronize();
   }
 }
-static void grouping(void) {
+static void grouping(bool canAssign) {
+  (void)canAssign;
   expression();
   consume(TOKEN_RIGHT_PRACE, "Expected ')' in expression.");
 }
@@ -237,22 +241,32 @@ static void emitConstant(Value val) {
   emitBytes(OP_CONSTANT, makeConstant(val));
 }
 
-static void number(void) {
+static void number(bool canAssign) {
+  (void)canAssign;
   double value = strtod(parser.previous.start,
                         NULL); // strtod converts str to double value
   emitConstant(NUMBER_VAL(value));
 }
-static void string(void) {
+static void string(bool canAssign) {
+  (void)canAssign;
   emitConstant(OBJ_VAL(
       copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
-static void namedVariable(Token name) {
+static void namedVariable(Token name, bool canAssign) {
   uintptr_t arg = indentifierConstant(&name);
+  if (match(TOKEN_EQUAL) && canAssign) {
+    expression();
+    emitBytes(OP_SET_GLOBAL, arg);
+  }
   emitBytes(OP_GET_GLOBAL, arg);
 }
-static void variable(void) { namedVariable(parser.previous); }
-static void
-unary(void) { // The consume of - expression came before unary() function call
+static void variable(bool canAssign) {
+  namedVariable(parser.previous, canAssign);
+}
+static void unary(bool canAssign) { // The consume of - expression came before
+                                    // unary() function call
+  (void)canAssign; // This is a way to declare,if a argument that you don't want
+                   // to use.
   TokenType operatorType = parser.previous.type;
   // Compile the operand
   // We need to evaluate the expression first,and
@@ -270,7 +284,8 @@ unary(void) { // The consume of - expression came before unary() function call
     break; // Unreachable
   }
 }
-static void binary(void) {
+static void binary(bool canAssign) {
+  (void)canAssign;
   TokenType operatorType = parser.previous.type;
   ParseRule *rule = getRule(operatorType);
   parsePrecedence((Precedece)(rule->precedence + 1));
@@ -312,7 +327,8 @@ static void binary(void) {
   }
 }
 
-static void literal(void) {
+static void literal(bool canAssign) {
+  (void)canAssign;
   switch (parser.previous.type) {
   case TOKEN_FALSE:
     emitByte(OP_FALSE);

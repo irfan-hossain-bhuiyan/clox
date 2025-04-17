@@ -71,7 +71,7 @@ void objectToString(char *output, const Value value) {
   switch (OBJ_TYPE(value)) {
 
   case OBJ_STRING:
-    sprintf(output, "%s", AS_CSTRING(value));
+    sprintf(output, "(%p)%s",(void*)AS_OBJ(value), AS_CSTRING(value));
     break;
   }
 }
